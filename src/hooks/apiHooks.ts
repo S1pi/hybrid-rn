@@ -3,11 +3,16 @@ import {
   Like,
   MediaItem,
   MediaItemWithOwner,
+  Rating,
   UserWithNoPassword,
 } from 'hybrid-types/DBTypes';
 import {useEffect, useState} from 'react';
 import {fetchData} from '../lib/functions';
-import {Credentials, RegisterCredentials} from '../types/LocalTypes';
+import {
+  Credentials,
+  RatingAverage,
+  RegisterCredentials,
+} from '../types/LocalTypes';
 import {
   AvailableResponse,
   LoginResponse,
@@ -287,4 +292,47 @@ const useLike = () => {
   return {postLike, deleteLike, getCountByMediaId, getUserLike};
 };
 
-export {useMedia, useFile, useAuthentication, useUser, useComment, useLike};
+const useRating = () => {
+  const postRating = async (
+    media_id: number,
+    rating: number,
+    token: string,
+  ) => {
+    const options = {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + token,
+        'Content-type': 'application/json',
+      },
+      body: JSON.stringify({rating_value: rating, media_id}),
+    };
+    return await fetchData<MessageResponse>(
+      process.env.EXPO_PUBLIC_MEDIA_API + '/ratings',
+      options,
+    );
+  };
+
+  const getRatingByMediaId = async (media_id: number) => {
+    return await fetchData<RatingAverage>(
+      process.env.EXPO_PUBLIC_MEDIA_API + '/ratings/average/' + media_id,
+    );
+  };
+
+  const getRatingListByMediaId = async (media_id: number) => {
+    return await fetchData<Rating[]>(
+      process.env.EXPO_PUBLIC_MEDIA_API + '/ratings/bymedia/' + media_id,
+    );
+  };
+
+  return {getRatingByMediaId, getRatingListByMediaId, postRating};
+};
+
+export {
+  useMedia,
+  useFile,
+  useAuthentication,
+  useUser,
+  useComment,
+  useLike,
+  useRating,
+};

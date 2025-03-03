@@ -9,3 +9,7 @@ export type AuthContextType = {
   handleLogout: () => void;
   handleAutoLogin: () => void;
 };
+
+export type RatingAverage = {
+  average: number;
+};

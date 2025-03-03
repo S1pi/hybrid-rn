@@ -5,6 +5,7 @@ import {Video} from 'expo-av';
 import {Card, Icon, ListItem} from '@rneui/base';
 import Likes from '../components/Likes';
 import Comments from '../components/Comments';
+import Ratings from '../components/Ratings';
 
 const Single = ({route}: any) => {
   const item: MediaItemWithOwner = route.params.item;
@@ -48,7 +49,7 @@ const Single = ({route}: any) => {
           <Icon name="image" />
           <Text>Size: {Math.round(item.filesize / 1024)} kB</Text>
         </ListItem>
-        {/* <Comments item={item} /> */}
+        <Ratings item={item} />
         <Comments item={item} />
       </Card>
     </ScrollView>
