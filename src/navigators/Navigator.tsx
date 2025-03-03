@@ -9,6 +9,7 @@ import {useUserContext} from '../hooks/ContextHooks';
 import LoginForm from '../components/LoginForm';
 import Login from '../views/Login';
 import MyFiles from '../views/MyFiles';
+import Upload from '../views/Upload';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -23,6 +24,8 @@ const TabScreen = () => {
             iconName = focused ? 'home-filled' : 'home';
           } else if (route.name === 'My Profile') {
             iconName = focused ? 'person-outline' : 'person-outline';
+          } else if (route.name === 'Upload') {
+            iconName = focused ? 'cloud-upload' : 'cloud-upload';
           }
           return <Icon name={iconName} size={size} color={color} />;
         },
@@ -35,6 +38,7 @@ const TabScreen = () => {
         component={Home}
         // options={{headerShown: false}}
       />
+      <Tab.Screen name="Upload" component={Upload} />
       <Tab.Screen name="My Profile" component={Profile} />
     </Tab.Navigator>
   );
