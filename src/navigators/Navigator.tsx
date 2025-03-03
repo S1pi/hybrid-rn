@@ -8,6 +8,7 @@ import {Icon} from '@rneui/base';
 import {useUserContext} from '../hooks/ContextHooks';
 import LoginForm from '../components/LoginForm';
 import Login from '../views/Login';
+import MyFiles from '../views/MyFiles';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -52,6 +53,7 @@ const StackScreen = () => {
             options={{headerShown: false}}
           />
           <Stack.Screen name="Single" component={Single} />
+          <Stack.Screen name="My Files" component={MyFiles} />
         </>
       ) : (
         <Stack.Screen name="Login and Registeration" component={Login} />
