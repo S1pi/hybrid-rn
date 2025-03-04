@@ -1,15 +1,19 @@
-import {Button, Card, Image, Text} from '@rneui/base';
+import {Button, Card, Image} from '@rneui/base';
 import {CardDivider} from '@rneui/base/dist/Card/Card.Divider';
 import {CardTitle} from '@rneui/base/dist/Card/Card.Title';
 import {Input} from '@rneui/themed';
 import * as ImagePicker from 'expo-image-picker';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Controller, useForm} from 'react-hook-form';
-import {View} from 'react-native';
+import {Alert, View} from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import {UploadResponse} from 'hybrid-types/MessageTypes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useMedia} from '../hooks/apiHooks';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {NavigatorType} from '../types/LocalTypes';
+import VideoPlayer from '../components/VideoPlayer';
 
 const Upload = () => {
   const [showLoading, setShowLoading] = useState(false);
@@ -22,10 +26,12 @@ const Upload = () => {
     control,
     handleSubmit,
     reset,
-    formState: {errors},
+    formState: {errors, isValid},
   } = useForm({
     defaultValues: initValues,
   });
+
+  const navigation = useNavigation<NativeStackNavigationProp<NavigatorType>>();
 
   const pickMedia = async () => {
     // No permissions request is necessary for launching the image library
@@ -33,7 +39,7 @@ const Upload = () => {
       mediaTypes: ['images', 'videos', 'livePhotos'],
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.6,
+      quality: 0.4,
     });
     console.log('Media', result);
 
@@ -67,6 +73,7 @@ const Upload = () => {
 
   const doUpload = async (inputs: {title: string; description: string}) => {
     if (!media || !media.assets || media.assets.length === 0) {
+      Alert.alert('Error', 'No media selected');
       return;
     }
     const token = await AsyncStorage.getItem('token');
@@ -78,12 +85,24 @@ const Upload = () => {
     console.log('File uploaded test', postExpo);
 
     await postMedia(postExpo, inputs, token);
+    handleReset();
+    navigation.navigate('My Media');
   };
 
   const handleReset = () => {
-    reset();
+    reset(initValues);
     setMedia(null);
   };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('blur', () => {
+      handleReset();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   return (
     <>
@@ -139,18 +158,33 @@ const Upload = () => {
         <View>
           <Card.Title>Preview</Card.Title>
           {media ? (
-            media.assets && media.assets.length > 0 ? (
-              <Card.Image
+            media.assets && media.assets[0].type === 'image' ? (
+              <Image
                 containerStyle={{
                   width: 200,
-                  height: 220,
                   margin: 'auto',
                 }}
                 source={{uri: media.assets[0].uri}}
-                style={{width: 200, height: 200, margin: 'auto'}}
+                style={{
+                  width: 200,
+                  height: 200,
+                  margin: 'auto',
+                  paddingBottom: 20,
+                }}
               />
             ) : (
-              <CardTitle>No media selected</CardTitle>
+              media.assets &&
+              media.assets[0].type === 'video' && (
+                <VideoPlayer
+                  videoFile={media.assets[0].uri}
+                  style={{
+                    width: 200,
+                    height: 200,
+                    margin: 'auto',
+                    paddingBottom: 20,
+                  }}
+                />
+              )
             )
           ) : (
             <CardTitle>No media selected</CardTitle>
@@ -158,12 +192,16 @@ const Upload = () => {
           <CardDivider>
             <Button title="Select Media" onPress={pickMedia} />
           </CardDivider>
-          <Button
-            title="Upload"
-            loading={showLoading}
-            onPress={handleSubmit(doUpload)}
-          />
-          <Button title="Reset" onPress={handleReset} />
+          <CardDivider>
+            <Button
+              title="Upload"
+              loading={showLoading}
+              disabled={!isValid || !media}
+              onPress={handleSubmit(doUpload)}
+            />
+          </CardDivider>
+
+          <Button title="Reset" color="warning" onPress={handleReset} />
         </View>
       </Card>
     </>

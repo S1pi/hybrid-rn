@@ -47,8 +47,9 @@ const useMedia = (id?: number) => {
           }),
         );
 
-        console.log(mediaWithOwner);
+        mediaWithOwner.reverse();
 
+        console.log(mediaWithOwner);
         setMediaArray(mediaWithOwner);
       } catch (error) {
         console.error((error as Error).message);
