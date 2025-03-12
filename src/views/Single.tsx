@@ -1,14 +1,38 @@
-import {RouteProp} from '@react-navigation/native';
+import {RouteProp, useNavigation} from '@react-navigation/native';
 import {MediaItemWithOwner} from 'hybrid-types/DBTypes';
-import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Alert, Image, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {Video} from 'expo-av';
-import {Card, Icon, ListItem} from '@rneui/base';
+import {Button, Card, Icon, ListItem} from '@rneui/base';
 import Likes from '../components/Likes';
-import Comments from '../components/Comments';
 import Ratings from '../components/Ratings';
+import {useMedia} from '../hooks/apiHooks';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useUpdateContext, useUserContext} from '../hooks/ContextHooks';
 
 const Single = ({route}: any) => {
   const item: MediaItemWithOwner = route.params.item;
+  const {deleteMedia} = useMedia();
+  const {user} = useUserContext();
+  const {triggerUpdate} = useUpdateContext();
+  const navigate = useNavigation();
+
+  const handleDelete = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+
+      if (!token) {
+        console.log('Token not found');
+        return;
+      }
+      const deleteResponse = await deleteMedia(item.media_id, token);
+      triggerUpdate();
+      Alert.alert('Deleted Successfully', deleteResponse.message);
+      navigate.goBack();
+      console.log(deleteResponse);
+    } catch (error) {
+      console.error((error as Error).message);
+    }
+  };
 
   return (
     <ScrollView>
@@ -50,7 +74,11 @@ const Single = ({route}: any) => {
           <Text>Size: {Math.round(item.filesize / 1024)} kB</Text>
         </ListItem>
         <Ratings item={item} />
-        <Comments item={item} />
+        {user && user.user_id === item.user_id && (
+          <ListItem>
+            <Button title="Delete" color="error" onPress={handleDelete} />
+          </ListItem>
+        )}
       </Card>
     </ScrollView>
   );

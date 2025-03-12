@@ -20,13 +20,17 @@ import {
   UploadResponse,
   UserResponse,
 } from 'hybrid-types/MessageTypes';
+import {useUpdateContext} from './ContextHooks';
 
 const useMedia = (id?: number) => {
   const [mediaArray, setMediaArray] = useState<MediaItemWithOwner[]>([]);
   const url = id ? '/media/byuser/' + id : '/media';
+  const [loading, setLoading] = useState<boolean>(false);
+  const {update} = useUpdateContext();
 
   useEffect(() => {
     const getMedia = async () => {
+      setLoading(true);
       try {
         // kaikki mediat ilman omistajan tietoja
         const media = await fetchData<MediaItem[]>(
@@ -53,11 +57,13 @@ const useMedia = (id?: number) => {
         setMediaArray(mediaWithOwner);
       } catch (error) {
         console.error((error as Error).message);
+      } finally {
+        setLoading(false);
       }
     };
 
     getMedia();
-  }, []);
+  }, [update]);
 
   const postMedia = async (
     file: UploadResponse,
@@ -93,7 +99,22 @@ const useMedia = (id?: number) => {
     );
   };
 
-  return {mediaArray, postMedia};
+  const deleteMedia = async (media_id: number, token: string) => {
+    // Send a DELETE request to /media/:media_id with the token in the Authorization header.
+    const options = {
+      method: 'DELETE',
+      headers: {
+        Authorization: 'Bearer ' + token,
+      },
+    };
+
+    return await fetchData<MessageResponse>(
+      process.env.EXPO_PUBLIC_MEDIA_API + '/media/' + media_id,
+      options,
+    );
+  };
+
+  return {mediaArray, postMedia, deleteMedia, loading};
 };
 
 const useFile = () => {

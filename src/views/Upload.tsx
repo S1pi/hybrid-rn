@@ -14,6 +14,7 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {NavigatorType} from '../types/LocalTypes';
 import VideoPlayer from '../components/VideoPlayer';
+import {useUpdateContext} from '../hooks/ContextHooks';
 
 const Upload = () => {
   const [showLoading, setShowLoading] = useState(false);
@@ -32,6 +33,7 @@ const Upload = () => {
   });
 
   const navigation = useNavigation<NativeStackNavigationProp<NavigatorType>>();
+  const {triggerUpdate} = useUpdateContext();
 
   const pickMedia = async () => {
     // No permissions request is necessary for launching the image library
@@ -84,8 +86,10 @@ const Upload = () => {
     const postExpo = await postExpoFile(media.assets[0].uri, token);
     console.log('File uploaded test', postExpo);
 
-    await postMedia(postExpo, inputs, token);
+    const response = await postMedia(postExpo, inputs, token);
     handleReset();
+    triggerUpdate();
+    Alert.alert('Success', response.message);
     navigation.navigate('My Media');
   };
 
@@ -196,7 +200,7 @@ const Upload = () => {
             <Button
               title="Upload"
               loading={showLoading}
-              disabled={!isValid || !media}
+              disabled={!isValid || !media || showLoading}
               onPress={handleSubmit(doUpload)}
             />
           </CardDivider>
